@@ -14,7 +14,7 @@ def idfm_next_passages(
     maximum_stop_visits: int = 6,
     language: str = "fr",
     timeout: float = 10.0,
-) -> list[dict]:
+) -> dict:
     """
     Retourne une liste de passages temps réel pour un StopPoint (quai) IDFM.
 
@@ -49,27 +49,4 @@ def idfm_next_passages(
         raise IDFMError(f"HTTP {resp.status_code}: {resp.text}") from e
 
     data = resp.json()
-    next_passages = extract_next_passages(data)
-    print(next_passages)
-    print_passages_table(next_passages)
-    siri = data.get("Siri", {}).get("ServiceDelivery", {})
-    deliveries = siri.get("StopMonitoringDelivery", [])
-    visits_out = []
-
-    for delivery in deliveries:
-        for mv in delivery.get("MonitoredStopVisit", []) or []:
-            mvj = mv.get("MonitoredVehicleJourney", {}) or {}
-            call = mv.get("MonitoredCall", {}) or (mvj.get("OnwardCalls", {}).get("OnwardCall", [{}])[0])
-
-            visits_out.append({
-                "line": mvj.get("LineRef"),
-                "direction": mvj.get("DirectionRef"),
-                "destination": (mvj.get("DestinationName") or mvj.get("PublishedLineName")),
-                "vehicle": mvj.get("VehicleRef"),
-                "expected_arrival": call.get("ExpectedArrivalTime") or call.get("AimedArrivalTime"),
-                "expected_departure": call.get("ExpectedDepartureTime") or call.get("AimedDepartureTime"),
-                "departure_status": call.get("DepartureStatus"),
-                "stop_name": call.get("StopPointName") or mvj.get("MonitoredCall", {}).get("StopPointName"),
-            })
-
-    return visits_out
+    return data

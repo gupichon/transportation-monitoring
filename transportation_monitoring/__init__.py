@@ -1,0 +1,3 @@
+from transportation_monitoring.extract_next_passages import load_ref_lines
+
+load_ref_lines()

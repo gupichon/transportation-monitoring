@@ -1,6 +1,9 @@
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
+from .data_explorer import jload, get
+
+
 def _parse_iso_utc(s: str | None) -> datetime | None:
     """Accepte les timestamps ISO8601 de SIRI (souvent suffixés 'Z') et renvoie un datetime UTC."""
     if not s:
@@ -8,10 +11,16 @@ def _parse_iso_utc(s: str | None) -> datetime | None:
     s = s.replace("Z", "+00:00")
     return datetime.fromisoformat(s)
 
+REF_LINES:dict = {}
+def load_ref_lines():
+    json_data = jload("transportation_monitoring/referentiel-des-lignes.json")
+    for line in json_data:
+        id_line:str = get(line, "id_line")
+        REF_LINES[id_line] = line
+
 def extract_next_passages(
     siri_json: dict,
     tz: str = "Europe/Paris",
-    line_map: dict[str, str] | None = None,
 ) -> list[dict]:
     """
     Transforme la réponse SIRI-Lite StopMonitoring en une liste de passages lisibles.
@@ -26,11 +35,7 @@ def extract_next_passages(
       - raw_line_ref: identifiant ligne SIRI ('STIF:Line::C01210:' ...)
       - monitoring_ref: identifiant du quai ('STIF:StopPoint:Q:...:')
 
-    line_map : permet d’écraser le mapping LineRef → numéro (ex. {'STIF:Line::C01210:': '189'})
     """
-    if line_map is None:
-        # D’après ton cas : C01210 = 189, C01211 = 190
-        line_map = {"STIF:Line::C01210:": "189", "STIF:Line::C01211:": "190"}
 
     tzinfo = ZoneInfo(tz)
 
@@ -76,10 +81,11 @@ def extract_next_passages(
             line_num = None
             # PublishedLineName peut contenir le numéro lisible (si présent)
             published = _first_text(mvj.get("PublishedLineName"))
+            line_id:str = line_ref.split("::")[1].strip(":") if line_ref else None
             if published:
                 line_num = str(published)
-            elif line_ref and line_ref in line_map:
-                line_num = line_map[line_ref]
+            elif line_id and line_id in REF_LINES:
+                line_num = REF_LINES[line_id]["shortname_line"]
             else:
                 # repli: extrait éventuel code 'C01210' → 'C01210'
                 if isinstance(line_ref, str) and ":Line::" in line_ref:

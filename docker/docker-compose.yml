@@ -1,0 +1,18 @@
+services:
+  transportation-monitoring:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: transportation-monitoring
+    restart: unless-stopped
+
+    # Monte les fichiers YAML locaux dans le conteneur (utile en dev)
+    # Si tu veux utiliser ceux déjà copiés dans l'image, commente cette section
+    volumes:
+      - ../secrets.yaml:/app/secrets.yaml:ro
+      - ../stops_monitoring.yaml:/app/stops_monitoring.yaml:ro
+
+    command: ["python", "-m", "transportation_monitoring.stops_query_loop"]
+
+    # (Optionnel) si ton app se connecte à Internet ou à un broker MQTT
+    network_mode: bridge

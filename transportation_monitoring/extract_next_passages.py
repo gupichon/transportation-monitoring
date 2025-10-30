@@ -47,8 +47,6 @@ def extract_next_passages(
     response_timestamp = siri_json.get("Siri", {}).get("ServiceDelivery", {}).get("ResponseTimestamp", None)
     response_time_utc = _parse_iso_utc(response_timestamp)
     response_time_local = response_time_utc.astimezone(tzinfo) if response_time_utc else None
-    print(response_time_utc)
-    print(response_time_local)
 
     results: list[dict] = []
     for delivery in deliveries:

@@ -14,5 +14,9 @@ services:
 
     command: ["python", "-m", "transportation_monitoring.stops_query_loop"]
 
-    # (Optionnel) si ton app se connecte à Internet ou à un broker MQTT
-    network_mode: bridge
+    networks:
+     - homeassistant_network
+
+networks:
+  homeassistant_network:
+   external: true

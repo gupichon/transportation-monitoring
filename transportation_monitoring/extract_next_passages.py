@@ -134,7 +134,7 @@ def extract_next_passages(
     results.sort(key=lambda r: r["when_local"])
     return results
 
-def _fmt(dt):
+def waiting_time_formatter(dt) -> str:
     if dt is None:
         return "—"
     if isinstance(dt, timedelta):
@@ -142,7 +142,7 @@ def _fmt(dt):
         hours, remainder = divmod(total_seconds, 3600)
         minutes, seconds = divmod(remainder, 60)
         if hours < 0:
-            return "On approach"
+            return "A l'approche"
         return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
     if isinstance(dt, datetime):
         return dt.strftime("%H:%M:%S")
@@ -157,6 +157,6 @@ def print_passages_table(passages: list[dict]):
     print("-" * 90)
     for r in passages:
         print(
-            f"{r['line']:>5}  {_fmt(r['waiting_time']):>14}  {str(r['destination'] or ''):<30}  "
+            f"{r['line']:>5}  {waiting_time_formatter(r['waiting_time']):>14}  {str(r['destination'] or ''):<30}  "
             f"{str(r['status'] or ''):<10}  {r['stop_name'] or ''}"
         )

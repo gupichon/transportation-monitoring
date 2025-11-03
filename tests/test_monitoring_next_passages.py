@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from transportation_monitoring.transportation_monitoring import idfm_next_passages
@@ -12,7 +14,9 @@ def test_next_passages(api_key,monitoring_ref):
     stops = idfm_next_passages(api_key, monitoring_ref)
     res = extract_next_passages(stops)
     print_passages_table(res)
-    #print(res)
+    for passage in res:
+        payload = json.dumps(passage, default=waiting_time_formatter)
+        print(payload)
 
 
 @pytest.mark.parametrize(("city", "stop_names"), [

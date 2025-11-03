@@ -1,0 +1,56 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "pyaml/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+  "/.github",
+  "/docs",
+  "/tests",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["pyaml"]
+
+[project]
+name = "Transportation monitoring"
+description = "Project for monitoring IDF transportations"
+readme = "README.md"
+requires-python = ">=3.12"
+dynamic = ["version"]
+#license = {file = "LICENSE"}
+keywords = ["Transportation", "IDFM", "PRIM", "MQTT", "Home Assistant", ]
+maintainers = [
+    {name = "Guillaume PICHON", email = "gupichon@gmail.com"}
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Natural Language :: English",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "pyyaml>=6.0.3",
+    "paho-mqtt>=2.1.0",
+    "requests>=2.32.5",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.4",
+    "pytest-cov>=3.0",
+]
+doc = [
+    "sphinx",
+    "travis-sphinx",
+    "sphinx-rtd-theme"
+]
+
+[project.urls]
+Homepage = "https://github.com/gupichon/transportation-monitoring"
+Repository = "https://github.com/gupichon/transportation-monitoring.git"

@@ -5,6 +5,9 @@ __version__ = "0.1.0"
 
 SECRETS_FILE = "secrets.yaml"
 MONITORING_FILE = "stops_monitoring.yaml"
-secrets = yload(SECRETS_FILE)
+try:
+    secrets = yload(SECRETS_FILE)
+except FileNotFoundError:
+    secrets = {}
 
 load_ref_lines()

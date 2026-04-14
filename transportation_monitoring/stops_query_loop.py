@@ -1,7 +1,7 @@
 from time import sleep
 
 from transportation_monitoring import secrets, MONITORING_FILE
-from transportation_monitoring.publish_passages import publish_passages
+from transportation_monitoring.publish_passages import publish_display_snapshot
 from .data_explorer import yload
 from .extract_next_passages import extract_next_passages, print_passages_table
 from .transportation_monitoring import idfm_next_passages
@@ -25,7 +25,7 @@ def stops_query_loop():
             res = extract_next_passages(next_passages_for_stop)
             next_passages.extend(res)
         print_passages_table(next_passages)
-        publish_passages(next_passages)
+        publish_display_snapshot(next_passages)
         if max_loop is not None and loop_count >= max_loop:
             print(f"Max loop count ({max_loop}) reached. Exiting.")
             break

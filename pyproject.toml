@@ -16,7 +16,7 @@ exclude = [
 packages = ["transportation_monitoring"]
 
 [project]
-name = "Transportation monitoring"
+name = "transportation-monitoring"
 description = "Project for monitoring IDF transportations"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -55,3 +55,8 @@ doc = [
 [project.urls]
 Homepage = "https://github.com/gupichon/transportation-monitoring"
 Repository = "https://github.com/gupichon/transportation-monitoring.git"
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: live Docker/IDFM/EMQX integration tests",
+]

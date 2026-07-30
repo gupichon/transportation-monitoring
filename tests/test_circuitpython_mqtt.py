@@ -90,3 +90,65 @@ def test_circuitpython_controller_ignores_other_topics():
 
     assert result is None
     assert controller.last_state is None
+
+
+def test_temperature_is_preserved_across_transport_updates_and_becomes_stale():
+    now = [100.0]
+    config = DisplayConfig(
+        selections=(StopRouteSelection("STOP_A", "Division Leclerc", ("T6",)),),
+        temperature_stale_after_seconds=5400,
+    )
+    view = InMemoryCircuitPythonView()
+    backend = CircuitPythonMagTagBackend(view=view)
+    controller = CircuitPythonMQTTDisplayController(
+        config=config,
+        backend=backend,
+        base_topic="transportation_monitoring",
+        monotonic_fn=lambda: now[0],
+    )
+
+    controller.process_message(
+        "zigbee2mqtt/Temp/hum balcon",
+        '{"temperature": 22.9, "humidity": 57.1}',
+    )
+    assert view.temperature.text == "22,9 °C"
+    controller.process_message(
+        "transportation_monitoring/snapshot",
+        build_snapshot_payload([], generated_at=datetime(2026, 7, 30, 9, 0, tzinfo=ZoneInfo("Europe/Paris"))),
+    )
+    assert view.temperature.text == "22,9 °C"
+    assert view.clock.text == "Maj 09:00"
+
+    now[0] += 5400
+    controller.tick()
+    assert view.temperature.text == "22,9 °C !"
+
+
+def test_invalid_temperature_keeps_last_valid_value(capsys):
+    config = DisplayConfig(selections=())
+    view = InMemoryCircuitPythonView()
+    controller = CircuitPythonMQTTDisplayController(
+        config=config,
+        backend=CircuitPythonMagTagBackend(view=view),
+        base_topic="transportation_monitoring",
+        monotonic_fn=lambda: 0.0,
+    )
+    controller.process_message("zigbee2mqtt/Temp/hum balcon", '{"temperature": -2.5}')
+    controller.process_message("zigbee2mqtt/Temp/hum balcon", '{"temperature": "bad"}')
+
+    assert view.temperature.text == "-2,5 °C"
+    assert "Invalid MQTT payload" in capsys.readouterr().out
+
+
+def test_network_error_replaces_clock_and_clears():
+    config = DisplayConfig(selections=())
+    view = InMemoryCircuitPythonView()
+    controller = CircuitPythonMQTTDisplayController(
+        config=config,
+        backend=CircuitPythonMagTagBackend(view=view),
+        base_topic="transportation_monitoring",
+    )
+    controller.set_network_error("ERR MQTT")
+    assert view.clock.text == "ERR MQTT"
+    controller.set_network_error(None)
+    assert view.clock.text == ""

@@ -24,24 +24,24 @@ def build_example_state():
         {
             "monitoring_ref": "STOP_A",
             "stop_name": "Division Leclerc",
-            "line": "189",
-            "destination": "Clamart Centre",
+            "line": "T6",
+            "destination": "Viroflay Rive Droite",
             "waiting_time": timedelta(minutes=3),
             "status": "onTime",
         },
         {
             "monitoring_ref": "STOP_A",
             "stop_name": "Division Leclerc",
-            "line": "190",
-            "destination": "Mairie de Clamart",
+            "line": "T6",
+            "destination": "Viroflay Rive Droite",
             "waiting_time": timedelta(minutes=7),
             "status": "onTime",
         },
         {
             "monitoring_ref": "STOP_A",
             "stop_name": "Division Leclerc",
-            "line": "190",
-            "destination": "Mairie d'Issy",
+            "line": "T6",
+            "destination": "Viroflay Rive Droite",
             "waiting_time": timedelta(minutes=11),
             "status": "onTime",
         },
@@ -71,7 +71,7 @@ def build_example_state():
         },
     ]
     selections = (
-        StopRouteSelection("STOP_A", "Division Leclerc", ("189", "190")),
+        StopRouteSelection("STOP_A", "Division Leclerc", ("T6",)),
         StopRouteSelection("STOP_B", "Cimetière", ("189", "190")),
     )
     state = build_display_state(
@@ -79,6 +79,7 @@ def build_example_state():
         selections=selections,
         generated_at=generated_at,
         max_entries_per_stop=3,
+        temperature_c=22.9,
     )
     return generated_at, passages, selections, state
 
@@ -97,9 +98,11 @@ def generate_artifacts(output_dir: Path = ARTIFACTS_DIR) -> tuple[Path, Path]:
         config=config,
         backend=CircuitPythonMagTagBackend(view=InMemoryCircuitPythonView(max_sections=2, max_rows_per_section=3)),
         base_topic="transport/home/bus",
+        monotonic_fn=lambda: 0.0,
     )
     payload = build_snapshot_payload(passages, generated_at=generated_at)
     controller.process_message(snapshot_topic("transport/home/bus"), payload)
+    controller.process_message("zigbee2mqtt/Temp/hum balcon", '{"temperature": 22.9}')
     mqtt_path = MockPngDisplay().save_png(controller.last_state, output_dir / "mqtt_display_example.png")
 
     return mock_path, mqtt_path

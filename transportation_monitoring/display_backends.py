@@ -65,6 +65,9 @@ def build_update_plan(
         previous.title != current.title
         or previous.generated_at != current.generated_at
         or previous.footer != current.footer
+        or previous.temperature_c != current.temperature_c
+        or previous.temperature_stale != current.temperature_stale
+        or previous.network_error != current.network_error
     )
     if header_changed:
         regions.append(DisplayRegion("header", 0, 0, current.width, 24))

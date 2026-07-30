@@ -6,8 +6,10 @@ from transportation_monitoring.display_config import parse_display_config
 from transportation_monitoring.display_models import (
     StopRouteSelection,
     build_display_state,
+    temperature_label,
 )
 from transportation_monitoring.mock_display import MockMagTagDisplay
+from transportation_monitoring.generate_artifacts import build_example_state
 
 
 def test_build_display_state_filters_lines_and_formats_wait_time():
@@ -70,6 +72,7 @@ def test_mock_magtag_display_renders_png_image():
         ],
         selections=[StopRouteSelection("STOP_A", "Division Leclerc", ("189",))],
         generated_at=datetime(2026, 4, 14, 15, 5, tzinfo=ZoneInfo("Europe/Paris")),
+        temperature_c=22.9,
     )
 
     renderer = MockMagTagDisplay()
@@ -77,6 +80,7 @@ def test_mock_magtag_display_renders_png_image():
 
     assert image.size == (296, 128)
     assert image.mode == "L"
+    assert temperature_label(state) == "22,9 °C"
 
 
 def test_circuitpython_backend_prefers_partial_updates_after_first_render():
@@ -137,3 +141,14 @@ def test_parse_display_config():
     assert config.footer is None
     assert len(config.selections) == 1
     assert config.selections[0].lines == ("189", "190")
+
+
+def test_generated_example_monitors_only_t6_at_division_leclerc():
+    _, passages, selections, state = build_example_state()
+
+    division_passages = [
+        passage for passage in passages if passage["stop_name"] == "Division Leclerc"
+    ]
+    assert {passage["line"] for passage in division_passages} == {"T6"}
+    assert selections[0].lines == ("T6",)
+    assert {entry.line for entry in state.sections[0].entries} == {"T6"}

@@ -5,7 +5,12 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 from transportation_monitoring.display_backends import DisplayUpdatePlan, build_update_plan
-from transportation_monitoring.display_models import TransitDisplayState, compact_line_rows
+from transportation_monitoring.display_models import (
+    TransitDisplayState,
+    clock_label,
+    compact_line_rows,
+    temperature_label,
+)
 
 
 class MockPngDisplay:
@@ -43,8 +48,10 @@ class MockPngDisplay:
         draw.rectangle((0, 0, state.width, state.height), fill=243)
         draw.rectangle((0, 0, state.width, 24), fill=217)
 
-        if state.generated_at is not None:
-            time_label = f"Maj {state.generated_at.strftime('%H:%M')}"
+        draw.text((10, 6), temperature_label(state), font=body_font, fill=40)
+
+        time_label = clock_label(state)
+        if time_label:
             bbox = draw.textbbox((0, 0), time_label, font=body_font)
             draw.text((state.width - (bbox[2] - bbox[0]) - 10, 6), time_label, font=body_font, fill=40)
 

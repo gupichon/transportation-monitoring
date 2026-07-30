@@ -1,0 +1,14 @@
+timezone: Europe/Paris
+stops:
+  - "STIF:StopPoint:Q:41855:"
+  - "STIF:StopPoint:Q:12406:"
+schedule:
+  - start: "06:30"
+    end: "07:30"
+    interval_seconds: 180
+  - start: "07:30"
+    end: "10:30"
+    interval_seconds: 60
+  - start: "10:30"
+    end: "22:30"
+    interval_seconds: 180

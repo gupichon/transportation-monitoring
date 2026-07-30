@@ -1,6 +1,6 @@
 .idea
 secrets.yaml
-stops_monitoring.yaml
+circuitpython/secret.py
 __pycache__
 tests/__pycache__
 *.pyc

@@ -12,6 +12,7 @@ class DisplayConfig:
     title: str = ""
     max_entries_per_stop: int = 3
     footer: str | None = None
+    temperature_stale_after_seconds: int | None = None
 
 
 def parse_display_config(raw_config: dict | None) -> DisplayConfig:
@@ -26,11 +27,13 @@ def parse_display_config(raw_config: dict | None) -> DisplayConfig:
         for stop in raw_stops
     )
 
+    stale_after = raw_config.get("temperature_stale_after_seconds")
     return DisplayConfig(
         title=raw_config.get("title", ""),
         selections=selections,
         max_entries_per_stop=int(raw_config.get("max_entries_per_stop", 3)),
         footer=raw_config.get("footer"),
+        temperature_stale_after_seconds=None if stale_after is None else int(stale_after),
     )
 
 

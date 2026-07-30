@@ -55,14 +55,18 @@ Create the following configuration files in the project root:
 
 ### `stops_monitoring.yaml`
 
-Specify which stops to monitor and the query interval:
+The tracked configuration monitors the two stops used by the display and uses
+an `Europe/Paris` daily schedule:
 
 ```yaml
 stops:
-  - "STIF:StopPoint:Q:41855:"  # Stop 1
-  - "STIF:StopPoint:Q:12406:"  # Stop 2
-sleeping_time: 120  # Interval in seconds between queries
-# max_loop: 5  # Optional: limit number of loops for testing
+  - "STIF:StopPoint:Q:41855:"
+  - "STIF:StopPoint:Q:12406:"
+timezone: Europe/Paris
+schedule:
+  - {start: "06:30", end: "07:30", interval_seconds: 180}
+  - {start: "07:30", end: "10:30", interval_seconds: 60}
+  - {start: "10:30", end: "22:30", interval_seconds: 180}
 ```
 
 ### `secrets.yaml`
@@ -71,10 +75,12 @@ Store your API credentials:
 
 ```yaml
 API_KEY: "your-idfm-api-key"
-MQTT_HOST: "mqtt-broker-host"
-MQTT_PORT: 1883
-MQTT_USERNAME: "username"  # Optional
-MQTT_PASSWORD: "password"  # Optional
+mqtt:
+  host: "192.168.1.30"
+  port: 1883
+  topic: "transportation_monitoring"
+  username: "your-emqx-login"
+  password: "your-emqx-password"
 ```
 
 ## Usage
@@ -136,6 +142,23 @@ With coverage:
 pytest --cov=transportation_monitoring
 ```
 
+### Live Docker integration test
+
+The live integration test is opt-in because it builds and starts the real
+producer container, performs two IDFM requests, and publishes through the
+configured EMQX broker. It uses a unique temporary MQTT topic and removes the
+retained message when the test finishes.
+
+Run it from PowerShell with:
+
+```powershell
+$env:RUN_LIVE_INTEGRATION = "1"
+C:\Users\gupic\miniconda3\Scripts\conda.exe run -n transportation-monitoring python -m pytest -q -m integration
+```
+
+The test reads `secrets.yaml` locally. The Docker build excludes that file and
+the container receives a temporary copy through a read-only bind mount.
+
 ## Mock Display Development
 
 For Adafruit product `4800`, the current hardware is the **MagTag 2.9" grayscale e-ink display** with a `296x128` screen. This repository now includes a pure-Python mock renderer that generates PNG images matching that target resolution, which makes it possible to iterate on layout without the real hardware.
@@ -190,6 +213,10 @@ For the Raspberry Pi + Docker publisher and the CircuitPython display, the recom
 - the MagTag subscribes to that topic and rebuilds the whole display state from the payload
 - the CircuitPython backend then applies only the changed regions when possible
 
+The snapshot is published with QoS 0 and `retain=true`, using the EMQX
+credentials from `secrets.yaml`. If either IDFM stop query fails, the producer
+does not publish a partial snapshot.
+
 ### Snapshot payload shape
 
 ```json
@@ -234,6 +261,24 @@ The display stack is separated into:
 - a CircuitPython-oriented backend skeleton that prefers partial updates and only falls back to periodic full refreshes for e-ink cleanup
 
 This keeps the mock simple while avoiding a design that assumes a full screen refresh on every change for the real device.
+
+## MagTag Wi-Fi firmware
+
+The deployable CircuitPython 10.2.1 firmware lives in `circuitpython/`.
+`code.py` is the entry point; network access, display state, and rendering live
+in separate modules. Copy `secret.example.py` to `secret.py`, provide the Wi-Fi
+and EMQX credentials, and follow `circuitpython/README.md`.
+
+The MagTag subscribes to:
+
+- `transportation_monitoring/snapshot` for passages
+- `zigbee2mqtt/Temp/hum balcon` for a Zigbee2MQTT JSON payload containing
+  `temperature`
+
+The header shows the outdoor temperature on the left and snapshot time on the
+right. A temperature older than 90 minutes receives a `!` marker. Wi-Fi or
+MQTT errors replace the clock after five consecutive failures; reconnection is
+retried every 10 seconds while the last display remains visible.
 
 ## API Reference
 

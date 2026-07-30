@@ -2,7 +2,12 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from transportation_monitoring.display_backends import DisplayUpdatePlan, build_update_plan
-from transportation_monitoring.display_models import TransitDisplayState, compact_line_rows
+from transportation_monitoring.display_models import (
+    TransitDisplayState,
+    clock_label,
+    compact_line_rows,
+    temperature_label,
+)
 
 
 class CircuitPythonView(Protocol):
@@ -26,6 +31,7 @@ class InMemoryCircuitPythonView:
     def __init__(self, max_sections: int = 4, max_rows_per_section: int = 3) -> None:
         self.title = TextCell()
         self.clock = TextCell()
+        self.temperature = TextCell()
         self.footer = TextCell()
         self.section_titles = [TextCell() for _ in range(max_sections)]
         self.section_lines = [[TextCell() for _ in range(max_rows_per_section)] for _ in range(max_sections)]
@@ -33,7 +39,8 @@ class InMemoryCircuitPythonView:
 
     def apply_state(self, state: TransitDisplayState, plan: DisplayUpdatePlan) -> None:
         self.title.text = state.title
-        self.clock.text = "" if state.generated_at is None else f"Maj {state.generated_at.strftime('%H:%M')}"
+        self.clock.text = clock_label(state)
+        self.temperature.text = temperature_label(state)
         self.footer.text = state.footer or ""
 
         for section_index, section in enumerate(state.sections):
@@ -88,10 +95,10 @@ class DisplayioMagTagView:
         self._label_module = label
         self._font = terminalio.FONT
 
-        self.title_label = label.Label(self._font, text="", color=0x111111, x=10, y=8)
+        self.temperature_label = label.Label(self._font, text="", color=0x111111, x=10, y=8)
         self.clock_label = label.Label(self._font, text="", color=0x222222, x=220, y=8)
 
-        self.root_group.append(self.title_label)
+        self.root_group.append(self.temperature_label)
         self.root_group.append(self.clock_label)
 
         self.section_titles = []
@@ -113,8 +120,8 @@ class DisplayioMagTagView:
             self.section_line_labels.append(section_rows)
 
     def apply_state(self, state: TransitDisplayState, plan: DisplayUpdatePlan) -> None:
-        self.title_label.text = state.title
-        self.clock_label.text = "" if state.generated_at is None else f"Maj {state.generated_at.strftime('%H:%M')}"
+        self.temperature_label.text = temperature_label(state)
+        self.clock_label.text = clock_label(state)
 
         for section_index in range(self.max_sections):
             if section_index < len(state.sections):

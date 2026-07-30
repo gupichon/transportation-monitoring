@@ -45,6 +45,9 @@ class TransitDisplayState:
     sections: tuple[StopDisplaySection, ...]
     title: str = ""
     footer: str | None = None
+    temperature_c: float | None = None
+    temperature_stale: bool = False
+    network_error: str | None = None
     width: int = MAGTAG_WIDTH
     height: int = MAGTAG_HEIGHT
 
@@ -70,6 +73,9 @@ def build_display_state(
     generated_at: datetime | None = None,
     max_entries_per_stop: int = 3,
     footer: str | None = None,
+    temperature_c: float | None = None,
+    temperature_stale: bool = False,
+    network_error: str | None = None,
 ) -> TransitDisplayState:
     sections: list[StopDisplaySection] = []
     passages_by_stop: dict[str, list[dict]] = {}
@@ -126,7 +132,25 @@ def build_display_state(
         generated_at=generated_at,
         sections=tuple(sections),
         footer=footer,
+        temperature_c=temperature_c,
+        temperature_stale=temperature_stale,
+        network_error=network_error,
     )
+
+
+def temperature_label(state: TransitDisplayState) -> str:
+    if state.temperature_c is None:
+        return "--,- °C"
+    value = f"{state.temperature_c:.1f}".replace(".", ",")
+    return f"{value} °C{' !' if state.temperature_stale else ''}"
+
+
+def clock_label(state: TransitDisplayState) -> str:
+    if state.network_error:
+        return state.network_error
+    if state.generated_at is None:
+        return ""
+    return f"Maj {state.generated_at.strftime('%H:%M')}"
 
 
 def compact_entries_label(entries: tuple[ArrivalDisplayEntry, ...]) -> str:

@@ -44,10 +44,89 @@ pip install -e ".[test]"
 
 ### Docker
 
-Build the Docker image:
-```bash
-docker build -t transportation-monitoring -f docker/Dockerfile .
+The Docker image deliberately does **not** contain `secrets.yaml`. Credentials
+remain on the Raspberry Pi and are mounted into the running container as a
+read-only file.
+
+Keep the following structure on the Raspberry Pi:
+
+```text
+transportation-monitoring/
+├── secrets.yaml
+├── stops_monitoring.yaml
+├── transportation_monitoring/
+└── docker/
+    ├── Dockerfile
+    ├── docker-compose.yml
+    └── requirements.txt
 ```
+
+Create `secrets.yaml` from `secrets.example.yaml`, fill the IDFM and EMQX
+credentials, then restrict access to the file:
+
+```bash
+cp secrets.example.yaml secrets.yaml
+chmod 600 secrets.yaml
+```
+
+The Compose configuration mounts:
+
+- `../secrets.yaml` as `/app/secrets.yaml:ro`
+- `../stops_monitoring.yaml` as `/app/stops_monitoring.yaml:ro`
+
+The `:ro` suffix prevents the container from modifying either host file.
+Because the paths are relative to `docker/docker-compose.yml`, both YAML files
+must remain in the project root.
+
+The service expects the external Docker network `homeassistant_network`.
+Check whether it exists:
+
+```bash
+docker network inspect homeassistant_network
+```
+
+If Home Assistant does not already manage that network, create it once:
+
+```bash
+docker network create homeassistant_network
+```
+
+Build and start the service from the project root:
+
+```bash
+docker compose -f docker/docker-compose.yml up -d --build
+```
+
+Check its status and follow its logs:
+
+```bash
+docker compose -f docker/docker-compose.yml ps
+docker compose -f docker/docker-compose.yml logs -f transportation-monitoring
+```
+
+To confirm that the files are mounted without printing their contents:
+
+```bash
+docker compose -f docker/docker-compose.yml exec transportation-monitoring \
+  sh -c 'test -r /app/secrets.yaml && test -r /app/stops_monitoring.yaml'
+```
+
+After pulling a new version, rebuild and restart:
+
+```bash
+git pull
+docker compose -f docker/docker-compose.yml up -d --build
+```
+
+To stop the service without deleting the host configuration:
+
+```bash
+docker compose -f docker/docker-compose.yml down
+```
+
+Never add `secrets.yaml` to the Dockerfile, commit it to Git, or copy it into an
+image archive. `.gitignore` and `.dockerignore` already exclude the real secret
+files, while `secrets.example.yaml` documents the expected structure.
 
 ## Configuration
 
@@ -94,7 +173,7 @@ python -m transportation_monitoring.stops_query_loop
 ### Run with Docker
 
 ```bash
-docker compose -f docker/docker-compose.yml up
+docker compose -f docker/docker-compose.yml up -d --build
 ```
 
 ## Project Structure
@@ -153,7 +232,7 @@ Run it from PowerShell with:
 
 ```powershell
 $env:RUN_LIVE_INTEGRATION = "1"
-C:\Users\gupic\miniconda3\Scripts\conda.exe run -n transportation-monitoring python -m pytest -q -m integration
+conda run -n transportation-monitoring python -m pytest -q -m integration
 ```
 
 The test reads `secrets.yaml` locally. The Docker build excludes that file and
@@ -172,7 +251,7 @@ max_entries_per_stop: 3
 stops:
   - monitoring_ref: "STIF:StopPoint:Q:41855:"
     label: "Division Leclerc"
-    lines: ["189", "190"]
+    lines: ["T6"]
 ```
 
 ### Example usage
@@ -226,9 +305,9 @@ does not publish a partial snapshot.
     {
       "monitoring_ref": "STIF:StopPoint:Q:41855:",
       "stop_name": "Division Leclerc",
-      "line": "189",
-      "destination": "Clamart Centre",
-      "direction": "Clamart",
+      "line": "T6",
+      "destination": "Viroflay Rive Droite",
+      "direction": "Viroflay",
       "status": "onTime",
       "waiting_seconds": 180
     }

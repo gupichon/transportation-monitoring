@@ -8,6 +8,7 @@ from pathlib import Path
 import subprocess
 from threading import Event
 from uuid import uuid4
+from zoneinfo import ZoneInfo
 
 import paho.mqtt.client as mqtt
 import pytest
@@ -111,7 +112,11 @@ def test_docker_queries_idfm_and_publishes_authenticated_snapshot(tmp_path):
         assert received.wait(10), "no MQTT snapshot received from the producer container"
 
         payload = json.loads(payloads[-1].decode("utf-8"))
-        assert datetime.fromisoformat(payload["generated_at"]).tzinfo is not None
+        generated_at = datetime.fromisoformat(payload["generated_at"])
+        assert generated_at.tzinfo is not None
+        assert generated_at.utcoffset() == generated_at.astimezone(
+            ZoneInfo("Europe/Paris")
+        ).utcoffset()
         assert isinstance(payload["passages"], list)
         for passage in payload["passages"]:
             assert {

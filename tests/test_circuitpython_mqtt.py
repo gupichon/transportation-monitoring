@@ -1,4 +1,5 @@
-from datetime import datetime, timedelta
+import json
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from transportation_monitoring.circuitpython_backend import (
@@ -10,6 +11,15 @@ from transportation_monitoring.display_config import DisplayConfig
 from transportation_monitoring.display_models import StopRouteSelection
 from transportation_monitoring.mock_display import MockPngDisplay
 from transportation_monitoring.mqtt_display import build_snapshot_payload, snapshot_topic
+
+
+def test_snapshot_time_is_serialized_in_europe_paris():
+    payload = build_snapshot_payload(
+        [],
+        generated_at=datetime(2026, 7, 30, 16, 0, tzinfo=timezone.utc),
+    )
+
+    assert json.loads(payload)["generated_at"] == "2026-07-30T18:00:00+02:00"
 
 
 def test_circuitpython_backend_consumes_mqtt_snapshot_and_matches_mock_render():

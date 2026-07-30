@@ -1,6 +1,7 @@
 .idea
 secrets.yaml
 circuitpython/secret.py
+circuitpython/lib/
 __pycache__
 tests/__pycache__
 *.pyc

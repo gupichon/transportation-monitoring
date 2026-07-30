@@ -3,9 +3,11 @@ from __future__ import annotations
 import json
 from datetime import datetime, timedelta
 from typing import Any
+from zoneinfo import ZoneInfo
 
 
 SNAPSHOT_TOPIC_SUFFIX = "snapshot"
+DISPLAY_TIMEZONE = ZoneInfo("Europe/Paris")
 
 
 def snapshot_topic(base_topic: str) -> str:
@@ -27,7 +29,11 @@ def build_snapshot_payload(
     generated_at: datetime | None = None,
 ) -> str:
     if generated_at is None:
-        generated_at = datetime.now().astimezone()
+        generated_at = datetime.now(DISPLAY_TIMEZONE)
+    elif generated_at.tzinfo is None:
+        raise ValueError("generated_at must include a timezone")
+    else:
+        generated_at = generated_at.astimezone(DISPLAY_TIMEZONE)
 
     payload = {
         "generated_at": generated_at.isoformat(),

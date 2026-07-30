@@ -139,7 +139,7 @@ an `Europe/Paris` daily schedule:
 
 ```yaml
 stops:
-  - "STIF:StopPoint:Q:41855:"
+  - "STIF:StopPoint:Q:41856:"
   - "STIF:StopPoint:Q:12406:"
 timezone: Europe/Paris
 schedule:
@@ -249,7 +249,7 @@ Create a dedicated file such as `display_config.yaml`:
 ```yaml
 max_entries_per_stop: 3
 stops:
-  - monitoring_ref: "STIF:StopPoint:Q:41855:"
+  - monitoring_ref: "STIF:StopPoint:Q:41856:"
     label: "Division Leclerc"
     lines: ["T6"]
 ```
@@ -303,11 +303,11 @@ does not publish a partial snapshot.
   "generated_at": "2026-04-14T08:12:00+02:00",
   "passages": [
     {
-      "monitoring_ref": "STIF:StopPoint:Q:41855:",
+      "monitoring_ref": "STIF:StopPoint:Q:41856:",
       "stop_name": "Division Leclerc",
       "line": "T6",
-      "destination": "Viroflay Rive Droite",
-      "direction": "Viroflay",
+      "destination": "Châtillon - Montrouge",
+      "direction": "Châtillon - Montrouge",
       "status": "onTime",
       "waiting_seconds": 180
     }

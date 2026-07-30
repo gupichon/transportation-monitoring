@@ -128,7 +128,7 @@ def test_parse_display_config():
             "max_entries_per_stop": 3,
             "stops": [
                 {
-                    "monitoring_ref": "STIF:StopPoint:Q:41855:",
+                    "monitoring_ref": "STIF:StopPoint:Q:41856:",
                     "label": "Division Leclerc",
                     "lines": ["189", "190"],
                 }

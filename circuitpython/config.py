@@ -10,7 +10,7 @@ MAX_PASSAGES_PER_STOP = 3
 
 DISPLAY_STOPS = (
     {
-        "monitoring_ref": "STIF:StopPoint:Q:41855:",
+        "monitoring_ref": "STIF:StopPoint:Q:41856:",
         "label": "Division Leclerc",
         "lines": ("T6",),
     },

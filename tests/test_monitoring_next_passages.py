@@ -7,7 +7,7 @@ from transportation_monitoring.extract_next_passages import *
 
 
 @pytest.mark.parametrize("monitoring_ref", [
-    "STIF:StopPoint:Q:41855:",
+    "STIF:StopPoint:Q:41856:",
     "STIF:StopPoint:Q:12406:",
 ])
 def test_next_passages(api_key,monitoring_ref):

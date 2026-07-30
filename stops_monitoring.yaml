@@ -1,6 +1,6 @@
 timezone: Europe/Paris
 stops:
-  - "STIF:StopPoint:Q:41855:"
+  - "STIF:StopPoint:Q:41856:"
   - "STIF:StopPoint:Q:12406:"
 schedule:
   - start: "06:30"
